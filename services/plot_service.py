@@ -1,7 +1,6 @@
-'''PROTOTIPO 3'''
 """
 Autor: [Josue Llumitasig]
-Fecha: 2025-06-11
+Fecha: 2025-06-13
 Descripción: Servicio para graficar el área bajo una curva o entre dos curvas usando matplotlib.
 Incluye visualización de límites, valor del área, fórmula en LaTeX y opción para guardar como imagen.
 """

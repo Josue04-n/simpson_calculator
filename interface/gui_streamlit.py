@@ -28,6 +28,7 @@ st.markdown("# 🧮 Calculadora de Integrales - Método de Simpson")
 # Menú con pestañas
 tabs = st.tabs(["📥 Ingreso de datos", "📊 Ver resultado", "📈 Ver gráfica"])
 
+
 # TAB 1 - Ingreso de datos
 with tabs[0]:
     st.subheader("🔣 Ingresa tu función")
@@ -55,6 +56,7 @@ with tabs[0]:
             st.session_state.b = b
             st.session_state.n = n
             st.success("✅ Cálculo realizado. Ve a la pestaña de resultados o gráfica.")
+
 
 # TAB 2 - Resultado simbólico y comparación
 with tabs[1]:

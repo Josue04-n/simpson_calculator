@@ -4,6 +4,7 @@ Fecha: 2025-06-11
 Descripción: Interfaz de línea de comandos (CLI) para calcular integrales definidas
 utilizando el método de Simpson 1/3. Permite calcular el área bajo una curva o entre dos curvas.
 """
+from core.utils import validar_funcion
 from services.plot_service import graficar_area
 import numpy as np
 from core.simpson import simpson_13
@@ -12,17 +13,22 @@ from sympy import symbols, lambdify, sympify
 def ingresar_funcion(mensaje="f(x) = "):
     print(f"👉 Ingresa la función {mensaje}")
     entrada = input()
-    x = symbols('x')
+    expr, latex_str, error = validar_funcion(entrada)
+
+    if error:
+        print(error)
+        return None, None, None
+
     try:
-        expresion = sympify(entrada)
-        f = lambdify(x, expresion, modules=['numpy'])
-        return f, str(expresion)
+        f = lambdify(symbols('x'), expr, modules=['numpy'])
+        return f, str(expr), latex_str
     except Exception as e:
-        print(f"❌ Error en la función: {e}")
-        return None, None
+        print(f"❌ Error al convertir a función evaluable: {e}")
+        return None, None, None
+
 
 def calcular_area_una_funcion():
-    f, texto_funcion = ingresar_funcion("a integrar (por ejemplo: sqrt(x) - x/2):")
+    f, texto_funcion, latex_funcion  = ingresar_funcion("a integrar (por ejemplo: sqrt(x) - x/2):")
     if f is None:
         return
 
@@ -43,8 +49,9 @@ def calcular_area_una_funcion():
 
 
 def calcular_area_entre_dos_funciones():
-    f1, texto1 = ingresar_funcion("superior f(x):")
-    f2, texto2 = ingresar_funcion("inferior g(x):")
+    f1, texto1, latex1  = ingresar_funcion("superior f(x):")
+    f2, texto2, latex2  = ingresar_funcion("inferior g(x):")
+
     if f1 is None or f2 is None:
         return
 
@@ -60,7 +67,9 @@ def calcular_area_entre_dos_funciones():
         ver = input("¿Deseas visualizar la gráfica? (s/n): ").strip().lower()
         if ver == "s":
             graficar_area(f1=f1, f2=f2, a=a, b=b, area_valor=resultado,
-                          texto_funcion1=texto1, texto_funcion2=texto2)
+              texto_funcion1=texto1, texto_funcion2=texto2, latex_funcion=latex1)  
+
+
 
     except Exception as e:
         print(f"❌ Error en los datos: {e}")

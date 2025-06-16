@@ -42,12 +42,22 @@ with tabs[0]:
     n = st.slider("Número de subintervalos (par)", min_value=2, max_value=100, step=2, value=4)
 
     if st.button("📌 Calcular integral"):
-        expr, latex_expr, error = validar_funcion(entrada)
-        if error:
-            st.error(error)
-        else:
-            f = lambdify(x, expr, modules=["numpy"])
+     expr, latex_expr, error = validar_funcion(entrada)
+     if error:
+        st.error(error)
+     else:
+        try:
+            # ✅ Detectar si la expresión es constante o depende de 'x'
+            if not expr.free_symbols:
+                constante = float(expr.evalf())
+                f = lambda x: np.full_like(x, constante)
+            else:
+                f = lambdify(x, expr, modules=["numpy"])
+
+            # Ejecutar cálculo
             resultado = simpson_13(f, a, b, n)
+
+            # Guardar resultados en el estado
             st.session_state.funcion_str = entrada
             st.session_state.expr = expr
             st.session_state.latex_expr = latex_expr
@@ -57,6 +67,8 @@ with tabs[0]:
             st.session_state.n = n
             st.success("✅ Cálculo realizado. Ve a la pestaña de resultados o gráfica.")
 
+        except Exception as e:
+            st.error(f"❌ Error en el cálculo: {e}")
 
 # TAB 2 - Resultado simbólico y comparación
 with tabs[1]:
@@ -75,12 +87,17 @@ with tabs[1]:
             st.warning("No se pudo calcular la integral exacta simbólicamente.")
     else:
         st.info("🕐 Calcula primero una integral en la pestaña anterior.")
-
 # TAB 3 - Gráfica
 with tabs[2]:
     st.subheader("📈 Visualización gráfica")
     if st.session_state.resultado is not None:
-        f_graf = lambdify(x, st.session_state.expr, modules=["numpy"])
+        # ✅ Ajuste para función constante o variable
+        if not st.session_state.expr.free_symbols:
+            constante = float(st.session_state.expr.evalf())
+            f_graf = lambda x_vals: np.full_like(x_vals, constante)
+        else:
+            f_graf = lambdify(x, st.session_state.expr, modules=["numpy"])
+
         fig = graficar_area(
             f1=f_graf,
             a=st.session_state.a,
@@ -89,6 +106,6 @@ with tabs[2]:
             texto_funcion1=st.session_state.funcion_str,
             latex_funcion=st.session_state.latex_expr
         )
-        st.pyplot(fig)  # ✅ Mostrar figura en Streamlit
+        st.pyplot(fig)
     else:
         st.info("📥 Calcula una función primero.")

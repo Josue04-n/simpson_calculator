@@ -4,6 +4,7 @@ Fecha: 2025-06-12
 Descripción: Interfaz gráfica con Streamlit para calcular integrales
 usando el método de Simpson 1/3, con visualización gráfica y entrada visual.
 """
+from builtins import Exception, abs, float
 import sys, os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 

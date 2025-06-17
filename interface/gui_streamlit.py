@@ -1,5 +1,5 @@
 """
-Autor: Josue Llumitasig
+Autor: Dennis Quisaguano
 Fecha: 2025-06-12
 Descripción: Prototipo 1 de la interfaz gráfica con Streamlit para calcular integrales
 usando el método de Simpson 1/3, con visualización gráfica y entrada validada.

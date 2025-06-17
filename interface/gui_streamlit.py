@@ -1,8 +1,8 @@
 """
 Autor: Dennis Quisaguano
 Fecha: 2025-06-12
-Descripción: Prototipo 1 de la interfaz gráfica con Streamlit para calcular integrales
-usando el método de Simpson 1/3, con visualización gráfica y entrada validada.
+Descripción: Interfaz gráfica con Streamlit para calcular integrales
+usando el método de Simpson 1/3, con visualización gráfica y entrada visual.
 """
 import sys, os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -10,6 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import streamlit as st
 import numpy as np
 from sympy import lambdify, symbols, integrate, latex
+from interface.components.keyboard_editor import teclado_editor
 from core.simpson import simpson_13
 from core.utils import validar_funcion
 from services.plot_service import graficar_area
@@ -28,47 +29,34 @@ st.markdown("# 🧮 Calculadora de Integrales - Método de Simpson")
 # Menú con pestañas
 tabs = st.tabs(["📥 Ingreso de datos", "📊 Ver resultado", "📈 Ver gráfica"])
 
-
 # TAB 1 - Ingreso de datos
 with tabs[0]:
-    st.subheader("🔣 Ingresa tu función")
-
-    col1, col2 = st.columns(2)
-    entrada = col1.text_input("✏️ Función f(x):", value="sqrt(x) - x/2")
-    col2.latex(f"f(x) = {latex(validar_funcion(entrada)[0])}")
+    entrada = teclado_editor()
 
     a = st.number_input("Límite inferior (a)", value=0.0)
     b = st.number_input("Límite superior (b)", value=4.0)
     n = st.slider("Número de subintervalos (par)", min_value=2, max_value=100, step=2, value=4)
 
     if st.button("📌 Calcular integral"):
-     expr, latex_expr, error = validar_funcion(entrada)
-     if error:
-        st.error(error)
-     else:
-        try:
-            # ✅ Detectar si la expresión es constante o depende de 'x'
-            if not expr.free_symbols:
-                constante = float(expr.evalf())
-                f = lambda x: np.full_like(x, constante)
-            else:
+        expr, latex_expr, error = validar_funcion(entrada)
+        if error:
+            st.error(error)
+        else:
+            try:
                 f = lambdify(x, expr, modules=["numpy"])
+                resultado = simpson_13(f, a, b, n)
 
-            # Ejecutar cálculo
-            resultado = simpson_13(f, a, b, n)
+                st.session_state.funcion_str = entrada
+                st.session_state.expr = expr
+                st.session_state.latex_expr = latex_expr
+                st.session_state.resultado = resultado
+                st.session_state.a = a
+                st.session_state.b = b
+                st.session_state.n = n
 
-            # Guardar resultados en el estado
-            st.session_state.funcion_str = entrada
-            st.session_state.expr = expr
-            st.session_state.latex_expr = latex_expr
-            st.session_state.resultado = resultado
-            st.session_state.a = a
-            st.session_state.b = b
-            st.session_state.n = n
-            st.success("✅ Cálculo realizado. Ve a la pestaña de resultados o gráfica.")
-
-        except Exception as e:
-            st.error(f"❌ Error en el cálculo: {e}")
+                st.success("✅ Cálculo realizado. Ve a la pestaña de resultados o gráfica.")
+            except Exception as e:
+                st.error(f"❌ Error en el cálculo: {e}")
 
 # TAB 2 - Resultado simbólico y comparación
 with tabs[1]:
@@ -87,17 +75,12 @@ with tabs[1]:
             st.warning("No se pudo calcular la integral exacta simbólicamente.")
     else:
         st.info("🕐 Calcula primero una integral en la pestaña anterior.")
+
 # TAB 3 - Gráfica
 with tabs[2]:
     st.subheader("📈 Visualización gráfica")
     if st.session_state.resultado is not None:
-        # ✅ Ajuste para función constante o variable
-        if not st.session_state.expr.free_symbols:
-            constante = float(st.session_state.expr.evalf())
-            f_graf = lambda x_vals: np.full_like(x_vals, constante)
-        else:
-            f_graf = lambdify(x, st.session_state.expr, modules=["numpy"])
-
+        f_graf = lambdify(x, st.session_state.expr, modules=["numpy"])
         fig = graficar_area(
             f1=f_graf,
             a=st.session_state.a,

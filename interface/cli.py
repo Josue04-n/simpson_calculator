@@ -1,15 +1,17 @@
 """
-Autor: [Josue Llumitasig]
+Autor: [Bryan Lopez]
 Fecha: 2025-06-11
 Descripción: Interfaz de línea de comandos (CLI) para calcular integrales definidas
 utilizando el método de Simpson 1/3. Permite calcular el área bajo una curva o entre dos curvas.
 """
+from builtins import Exception, float, input, int, str
 
+from rich import print
 from core.utils import validar_funcion
 from services.plot_service import graficar_area
 import numpy as np
 from core.simpson import simpson_13
-from sympy import symbols, lambdify, sympify
+from sympy import symbols, lambdify
 
 def ingresar_funcion(mensaje="f(x) = "):
     print(f"👉 Ingresa la función {mensaje}")
@@ -32,7 +34,6 @@ def calcular_area_una_funcion():
     f, texto_funcion, latex_funcion  = ingresar_funcion("a integrar (por ejemplo: sqrt(x) - x/2):")
     if f is None:
         return
-
 
     try:
         a = float(input("🔢 Límite inferior a: "))

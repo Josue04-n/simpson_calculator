@@ -11,7 +11,7 @@ from core.utils import validar_funcion
 from services.plot_service import graficar_area
 import numpy as np
 from core.simpson import simpson_13
-from sympy import symbols, lambdify, sympify
+from sympy import symbols, lambdify
 
 def ingresar_funcion(mensaje="f(x) = "):
     print(f"👉 Ingresa la función {mensaje}")

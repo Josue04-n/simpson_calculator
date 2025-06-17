@@ -1,56 +1,97 @@
-"""
-Autor: [Josue Llumitasig]
-Fecha: 2025-06-13
-Descripción: Servicio para graficar el área bajo una curva o entre dos curvas usando matplotlib.
-Incluye visualización de límites, valor del área, fórmula en LaTeX y opción para guardar como imagen.
-"""
-
+from builtins import dict
 import numpy as np
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 
-def graficar_area(
+def graficar_area_interactiva(
     f1,
     a,
     b,
     area_valor=None,
     texto_funcion1="f(x)",
-    f2=None,
-    texto_funcion2="",
-    guardar_como=None,
-    latex_funcion=None,  
+    latex_funcion="",
     puntos=1000
 ):
-    x = np.linspace(a, b, puntos)
-    y1 = f1(x)
+    # Ampliar margen para ver la función completa
+    margen = (b - a) * 2 if (b - a) > 0 else 10
+    x_total = np.linspace(a - margen, b + margen, puntos)
+    y_total = f1(x_total)
+    y_total = np.where(np.isfinite(y_total), y_total, np.nan)
 
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ax.plot(x, y1, label=texto_funcion1, color='green', linewidth=2)
+    # Área bajo la curva
+    x_fill = np.linspace(a, b, puntos)
+    y_fill = f1(x_fill)
+    y_fill = np.where(np.isfinite(y_fill), y_fill, np.nan)
 
-    if f2:
-        y2 = f2(x)
-        ax.plot(x, y2, label=texto_funcion2, color='blue', linestyle='--', linewidth=2)
-        ax.fill_between(x, y1, y2, color='orange', alpha=0.4, label='Área entre funciones')
-    else:
-        ax.fill_between(x, y1, color='orange', alpha=0.4, label='Área bajo la curva')
+    fig = go.Figure()
 
-    ax.axvline(a, color='red', linestyle='--', label=f"x = {a}")
-    ax.axvline(b, color='purple', linestyle='--', label=f"x = {b}")
+    # Curva de la función completa
+    fig.add_trace(go.Scatter(
+        x=x_total,
+        y=y_total,
+        mode='lines',
+        name=f"${latex_funcion}$" if latex_funcion else texto_funcion1,
+        line=dict(color='green', width=2),
+        hovertemplate='x=%{x}<br>f(x)=%{y}<extra></extra>'
+    ))
 
+    # Área sombreada bajo la curva entre a y b
+    fig.add_trace(go.Scatter(
+        x=np.concatenate([[a], x_fill, [b]]),
+        y=np.concatenate([[0], y_fill, [0]]),
+        fill='toself',
+        name="Área bajo la curva",
+        fillcolor='rgba(255,165,0,0.4)',
+        line=dict(color='orange'),
+        hoverinfo='skip'
+    ))
+
+    # Anotación del valor de área
     if area_valor is not None:
-        ax.text((a + b) / 2, max(y1) * 0.7, f"Área ≈ {area_valor:.4f}", fontsize=12,
-                bbox=dict(facecolor='white', edgecolor='black'))
+        fig.add_annotation(
+            x=(a + b) / 2,
+            y=np.nanmax(y_fill) * 0.6,
+            text=f"Área ≈ {area_valor:.4f}",
+            showarrow=False,
+            font=dict(size=14, color="black"),
+            bgcolor="white"
+        )
 
+    # Mostrar fórmula simbólica en esquina superior izquierda
     if latex_funcion:
-        ax.text(a, max(y1) * 1.05, f"${latex_funcion}$", fontsize=16, color='darkgreen')
+        fig.add_annotation(
+            xref="paper", yref="paper",
+            x=0.01, y=0.99,
+            text=f"${latex_funcion}$",
+            showarrow=False,
+            font=dict(size=18, color="darkgreen")
+        )
 
-    ax.set_title("Visualización de Área")
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
-    ax.grid(True)
-    ax.legend()
+    # Líneas de los límites
+    fig.add_vline(x=a, line=dict(color='red', dash='dot'),
+                  annotation_text=f"a = {a}", annotation_position="bottom left")
+    fig.add_vline(x=b, line=dict(color='purple', dash='dot'),
+                  annotation_text=f"b = {b}", annotation_position="bottom right")
 
-    if guardar_como:
-        fig.savefig(guardar_como, dpi=300)
-        print(f"✅ Imagen guardada como: {guardar_como}")
+    # Configuración interactiva: zoom y scroll
+    fig.update_layout(
+        title="Visualización Interactiva del Área",
+        xaxis_title="x",
+        yaxis_title="f(x)",
+        hovermode="x unified",
+        template="plotly_white",
+        showlegend=True,
+        xaxis=dict(
+            showgrid=True,
+            zeroline=True,
+            rangeslider=dict(visible=True),  # Zoom con scroll
+            title="🖱️ Usa el scroll o arrastra para acercar/alejar"
+        ),
+        yaxis=dict(
+            showgrid=True,
+            zeroline=True,
+            automargin=True,
+            rangemode="tozero"
+        )
+    )
 
     return fig

@@ -11,20 +11,27 @@ def graficar_area_interactiva(
     latex_funcion="",
     puntos=1000
 ):
-    # Ampliar margen para ver la función completa
-    margen = (b - a) * 2 if (b - a) > 0 else 10
-    x_total = np.linspace(a - margen, b + margen, puntos)
+    # Dominios extendidos
+    margen_x = (b - a) * 2 if (b - a) > 0 else 10
+    x_total = np.linspace(a - margen_x, b + margen_x, puntos)
     y_total = f1(x_total)
     y_total = np.where(np.isfinite(y_total), y_total, np.nan)
 
-    # Área bajo la curva
+    # Dominio del área
     x_fill = np.linspace(a, b, puntos)
     y_fill = f1(x_fill)
     y_fill = np.where(np.isfinite(y_fill), y_fill, np.nan)
 
+    # Asegurar visualización de los 4 cuadrantes
+    y_min = np.nanmin(np.concatenate([y_total, y_fill]))
+    y_max = np.nanmax(np.concatenate([y_total, y_fill]))
+    margen_y = (y_max - y_min) * 0.2 if (y_max - y_min) > 0 else 10
+    y_lim_inf = min(0, y_min - margen_y)
+    y_lim_sup = max(0, y_max + margen_y)
+
     fig = go.Figure()
 
-    # Curva de la función completa
+    # Curva completa
     fig.add_trace(go.Scatter(
         x=x_total,
         y=y_total,
@@ -34,7 +41,7 @@ def graficar_area_interactiva(
         hovertemplate='x=%{x}<br>f(x)=%{y}<extra></extra>'
     ))
 
-    # Área sombreada bajo la curva entre a y b
+    # Área bajo la curva
     fig.add_trace(go.Scatter(
         x=np.concatenate([[a], x_fill, [b]]),
         y=np.concatenate([[0], y_fill, [0]]),
@@ -45,7 +52,7 @@ def graficar_area_interactiva(
         hoverinfo='skip'
     ))
 
-    # Anotación del valor de área
+    # Valor del área
     if area_valor is not None:
         fig.add_annotation(
             x=(a + b) / 2,
@@ -56,7 +63,7 @@ def graficar_area_interactiva(
             bgcolor="white"
         )
 
-    # Mostrar fórmula simbólica en esquina superior izquierda
+    # Título de la función
     if latex_funcion:
         fig.add_annotation(
             xref="paper", yref="paper",
@@ -66,31 +73,34 @@ def graficar_area_interactiva(
             font=dict(size=18, color="darkgreen")
         )
 
-    # Líneas de los límites
+    # Líneas de a y b
     fig.add_vline(x=a, line=dict(color='red', dash='dot'),
                   annotation_text=f"a = {a}", annotation_position="bottom left")
     fig.add_vline(x=b, line=dict(color='purple', dash='dot'),
                   annotation_text=f"b = {b}", annotation_position="bottom right")
 
-    # Configuración interactiva: zoom y scroll
+    # Ejes X e Y bien centrados
+    fig.add_hline(y=0, line=dict(color='white', width=1))
+    fig.add_vline(x=0, line=dict(color='white', width=1))
+
+    # Estilo general
     fig.update_layout(
         title="Visualización Interactiva del Área",
         xaxis_title="x",
         yaxis_title="f(x)",
         hovermode="x unified",
-        template="plotly_white",
+        template="plotly_dark",
         showlegend=True,
         xaxis=dict(
             showgrid=True,
-            zeroline=True,
-            rangeslider=dict(visible=True),  # Zoom con scroll
-            title="🖱️ Usa el scroll o arrastra para acercar/alejar"
+            zeroline=False,
+            rangeslider=dict(visible=True),
+            title="🖱️ Usa el scroll inferior o arrastra para explorar el dominio"
         ),
         yaxis=dict(
             showgrid=True,
-            zeroline=True,
-            automargin=True,
-            rangemode="tozero"
+            zeroline=False,
+            range=[y_lim_inf, y_lim_sup]
         )
     )
 

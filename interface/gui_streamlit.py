@@ -1,4 +1,4 @@
-from builtins import Exception, abs, float
+from builtins import Exception, abs, dict, float, max
 import sys, os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -17,22 +17,21 @@ for key in ["funcion_str", "expr", "latex_expr", "resultado", "a", "b", "n"]:
     if key not in st.session_state:
         st.session_state[key] = None
 
-# Configuración de la interfaz
+# Configuración de página
 st.set_page_config(page_title="Calculadora de Integrales", layout="wide")
 st.markdown("# 🧮 Calculadora de Integrales - Método de Simpson")
+
 tabs = st.tabs(["📥 Ingreso de datos", "📊 Ver resultado", "📈 Ver gráfica"])
 
-# TAB 1 - Ingreso de datos
+# TAB 1 - Entrada
 with tabs[0]:
     entrada = teclado_editor()
 
-    col1, col2 = st.columns(2)
-    a = col1.number_input("📌 Límite inferior (a)", value=0.0)
-    b = col2.number_input("📌 Límite superior (b)", value=4.0)
+    a = st.number_input("Límite inferior (a)", value=0.0)
+    b = st.number_input("Límite superior (b)", value=4.0)
+    n = st.slider("Número de subintervalos (par)", min_value=2, max_value=100, step=2, value=4)
 
-    n = st.slider("🔢 Número de subintervalos (par)", min_value=2, max_value=100, step=2, value=4)
-
-    if st.button("📐 Calcular integral"):
+    if st.button("📌 Calcular integral"):
         expr, latex_expr, error = validar_funcion(entrada)
         if error:
             st.error(error)
@@ -41,7 +40,6 @@ with tabs[0]:
                 f = lambdify(x, expr, modules=["numpy"])
                 resultado = simpson_13(f, a, b, n)
 
-                # Guardar en estado
                 st.session_state.funcion_str = entrada
                 st.session_state.expr = expr
                 st.session_state.latex_expr = latex_expr
@@ -54,12 +52,13 @@ with tabs[0]:
             except Exception as e:
                 st.error(f"❌ Error en el cálculo: {e}")
 
-# TAB 2 - Resultados
+# TAB 2 - Resultado
 with tabs[1]:
-    st.markdown("## 📊 Resultado del cálculo")
+    st.subheader("📊 Resultado del cálculo")
     if st.session_state.resultado is not None:
         st.latex(f"\\int_{{{st.session_state.a}}}^{{{st.session_state.b}}} {st.session_state.latex_expr} \\,dx")
         st.info(f"📌 Área aproximada (Simpson): {st.session_state.resultado:.6f}")
+
         try:
             exacta = float(integrate(st.session_state.expr, (x, st.session_state.a, st.session_state.b)))
             st.success(f"🧮 Área exacta: {exacta:.6f}")
@@ -67,13 +66,13 @@ with tabs[1]:
             st.warning(f"📏 Error absoluto: {error:.6f}")
             st.warning(f"📉 Error relativo: {100 * error / exacta:.4f}%")
         except:
-            st.warning("⚠️ No se pudo calcular simbólicamente la integral exacta.")
+            st.warning("⚠️ No se pudo calcular la integral exacta simbólicamente.")
     else:
         st.info("🕐 Calcula primero una integral en la pestaña anterior.")
 
 # TAB 3 - Gráfica
 with tabs[2]:
-    st.markdown("## 📈 Visualización gráfica")
+    st.subheader("📈 Visualización gráfica")
     if st.session_state.resultado is not None:
         try:
             f_graf = lambdify(x, st.session_state.expr, modules=["numpy"])

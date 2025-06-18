@@ -6,6 +6,7 @@ import streamlit as st
 import numpy as np
 from sympy import lambdify, symbols, integrate, latex
 from interface.components.keyboard_editor import teclado_editor
+from interface.components.chatbot_box import mostrar_chatbot
 from core.simpson import simpson_13
 from core.utils import validar_funcion
 from services.plot_service import graficar_area_interactiva
@@ -17,19 +18,23 @@ for key in ["funcion_str", "expr", "latex_expr", "resultado", "a", "b", "n"]:
     if key not in st.session_state:
         st.session_state[key] = None
 
+# Inicializar sincronización del asistente IA
+if "calculado_por_asistente" not in st.session_state:
+    st.session_state.calculado_por_asistente = False
+
 # Configuración de página
 st.set_page_config(page_title="Calculadora de Integrales", layout="wide")
-st.markdown("# 🧮 Calculadora de Integrales - Método de Simpson")
+st.markdown("# 🧼 Calculadora de Integrales - Método de Simpson")
 
-tabs = st.tabs(["📥 Ingreso de datos", "📊 Ver resultado", "📈 Ver gráfica"])
+tabs = st.tabs(["📥 Ingreso de datos", "📊 Ver resultado", "📈 Ver gráfica", "💬 Asistente IA"])
 
-# TAB 1 - Entrada
+# TAB 1 - Ingreso de datos
 with tabs[0]:
-    entrada = teclado_editor()
+    entrada = teclado_editor(default=st.session_state.funcion_str or "")
 
-    a = st.number_input("Límite inferior (a)", value=0.0)
-    b = st.number_input("Límite superior (b)", value=4.0)
-    n = st.slider("Número de subintervalos (par)", min_value=2, max_value=100, step=2, value=4)
+    a = st.number_input("Límite inferior (a)", value=st.session_state.a if st.session_state.a is not None else 0.0)
+    b = st.number_input("Límite superior (b)", value=st.session_state.b if st.session_state.b is not None else 4.0)
+    n = st.slider("Número de subintervalos (par)", min_value=2, max_value=100, step=2, value=st.session_state.n or 4)
 
     if st.button("📌 Calcular integral"):
         expr, latex_expr, error = validar_funcion(entrada)
@@ -47,6 +52,7 @@ with tabs[0]:
                 st.session_state.a = a
                 st.session_state.b = b
                 st.session_state.n = n
+                st.session_state.calculado_por_asistente = False  # Viene del usuario
 
                 st.success("✅ Cálculo realizado. Ve a la pestaña de resultados o gráfica.")
             except Exception as e:
@@ -55,7 +61,11 @@ with tabs[0]:
 # TAB 2 - Resultado
 with tabs[1]:
     st.subheader("📊 Resultado del cálculo")
-    if st.session_state.resultado is not None:
+    if st.session_state.resultado is not None or st.session_state.calculado_por_asistente:
+        if st.session_state.calculado_por_asistente:
+            st.toast("ℹ️ Mostrando resultado calculado por el Asistente IA")
+            st.session_state.calculado_por_asistente = False
+
         st.latex(f"\\int_{{{st.session_state.a}}}^{{{st.session_state.b}}} {st.session_state.latex_expr} \\,dx")
         st.info(f"📌 Área aproximada (Simpson): {st.session_state.resultado:.6f}")
 
@@ -63,8 +73,8 @@ with tabs[1]:
             exacta = float(integrate(st.session_state.expr, (x, st.session_state.a, st.session_state.b)))
             st.success(f"🧮 Área exacta: {exacta:.6f}")
             error = abs(exacta - st.session_state.resultado)
-            st.warning(f"📏 Error absoluto: {error:.6f}")
-            st.warning(f"📉 Error relativo: {100 * error / exacta:.4f}%")
+            st.warning(f"🔏 Error absoluto: {error:.6f}")
+            st.warning(f"🔷 Error relativo: {100 * error / exacta:.4f}%")
         except:
             st.warning("⚠️ No se pudo calcular la integral exacta simbólicamente.")
     else:
@@ -73,7 +83,11 @@ with tabs[1]:
 # TAB 3 - Gráfica
 with tabs[2]:
     st.subheader("📈 Visualización gráfica")
-    if st.session_state.resultado is not None:
+    if st.session_state.resultado is not None or st.session_state.calculado_por_asistente:
+        if st.session_state.calculado_por_asistente:
+            st.toast("ℹ️ Mostrando gráfica calculada por el Asistente IA")
+            st.session_state.calculado_por_asistente = False
+
         try:
             f_graf = lambdify(x, st.session_state.expr, modules=["numpy"])
             fig = graficar_area_interactiva(
@@ -88,4 +102,8 @@ with tabs[2]:
         except Exception as e:
             st.error(f"❌ Error al graficar: {e}")
     else:
-        st.info("📥 Calcula una función primero.")
+        st.info("📅 Calcula una función primero.")
+
+# TAB 4 - Asistente IA
+with tabs[3]:
+    mostrar_chatbot()

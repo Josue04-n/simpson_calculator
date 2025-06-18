@@ -1,4 +1,4 @@
-from builtins import dict
+from builtins import dict, max, min
 import numpy as np
 import plotly.graph_objects as go
 

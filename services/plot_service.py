@@ -1,111 +1,107 @@
-'''
-GRAFICA PROTOTIPO 1
-Autor: Josue Llumitasig
-Fecha: 2025-06-11
-Descripción: Servicio para graficar funciones y mostrar el área bajo la curva usando matplotlib.
-
-
+from builtins import dict, max, min
 import numpy as np
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 
-def graficar_area_bajo_funcion(f, a, b, puntos=1000):
-    x = np.linspace(a, b, puntos)
-    y = f(x)
-
-    plt.figure(figsize=(8, 5))
-    plt.plot(x, y, label='f(x)', color='green')
-    plt.fill_between(x, y, color='orange', alpha=0.4, label='Área bajo la curva')
-    
-    plt.title('Área bajo la curva de f(x)')
-    plt.xlabel('x')
-    plt.ylabel('f(x)')
-    plt.axhline(0, color='black', linewidth=0.5)
-    plt.legend()
-    plt.grid(True)
-    plt.show()
-    '''
-    
-'''GRAFICA PROTOTIPO 2
-
-import numpy as np
-import matplotlib.pyplot as plt
-
-def graficar_area_bajo_funcion_v2(f, a, b, area_valor=None, texto_funcion="f(x)", puntos=1000):
-    x = np.linspace(a, b, puntos)
-    y = f(x)
-
-    plt.figure(figsize=(10, 6))
-    plt.plot(x, y, label=texto_funcion, color='green', linewidth=2)
-    plt.fill_between(x, y, color='orange', alpha=0.4, label='Área bajo la curva')
-
-    # Líneas verticales en a y b
-    plt.axvline(a, color='red', linestyle='--', label=f"x = {a}")
-    plt.axvline(b, color='blue', linestyle='--', label=f"x = {b}")
-
-    # Mostrar área numérica si se pasa
-    if area_valor is not None:
-        plt.text((a + b) / 2, max(y) * 0.7, f"Área ≈ {area_valor:.4f}", fontsize=12, bbox=dict(facecolor='white', edgecolor='black'))
-
-    plt.title(f"Área bajo la curva {texto_funcion} en [{a}, {b}]")
-    plt.xlabel("x")
-    plt.ylabel("f(x)")
-    plt.grid(True)
-    plt.legend()
-    plt.show()
-
-   '''
-'''PROTOTIPO 3'''
-"""
-Autor: [Tu Nombre]
-Fecha: 2025-06-11
-Descripción: Servicio para graficar el área bajo una curva o entre dos curvas usando matplotlib.
-Incluye visualización de límites, valor del área y opción para guardar como imagen.
-"""
-
-import numpy as np
-import matplotlib.pyplot as plt
-
-def graficar_area(
+def graficar_area_interactiva(
     f1,
     a,
     b,
     area_valor=None,
     texto_funcion1="f(x)",
-    f2=None,
-    texto_funcion2="",
-    guardar_como=None,
+    latex_funcion="",
     puntos=1000
 ):
-    x = np.linspace(a, b, puntos)
-    y1 = f1(x)
+    # Dominios extendidos
+    margen_x = (b - a) * 2 if (b - a) > 0 else 10
+    x_total = np.linspace(a - margen_x, b + margen_x, puntos)
+    y_total = f1(x_total)
+    y_total = np.where(np.isfinite(y_total), y_total, np.nan)
 
-    plt.figure(figsize=(10, 6))
-    plt.plot(x, y1, label=texto_funcion1, color='green', linewidth=2)
+    # Dominio del área
+    x_fill = np.linspace(a, b, puntos)
+    y_fill = f1(x_fill)
+    y_fill = np.where(np.isfinite(y_fill), y_fill, np.nan)
 
-    if f2:
-        y2 = f2(x)
-        plt.plot(x, y2, label=texto_funcion2, color='blue', linestyle='--', linewidth=2)
-        plt.fill_between(x, y1, y2, color='orange', alpha=0.4, label='Área entre funciones')
-    else:
-        plt.fill_between(x, y1, color='orange', alpha=0.4, label='Área bajo la curva')
+    # Asegurar visualización de los 4 cuadrantes
+    y_min = np.nanmin(np.concatenate([y_total, y_fill]))
+    y_max = np.nanmax(np.concatenate([y_total, y_fill]))
+    margen_y = (y_max - y_min) * 0.2 if (y_max - y_min) > 0 else 10
+    y_lim_inf = min(0, y_min - margen_y)
+    y_lim_sup = max(0, y_max + margen_y)
 
-    # Límites de integración
-    plt.axvline(a, color='red', linestyle='--', label=f"x = {a}")
-    plt.axvline(b, color='purple', linestyle='--', label=f"x = {b}")
+    fig = go.Figure()
 
-    # Valor del área en el gráfico
+    # Curva completa
+    fig.add_trace(go.Scatter(
+        x=x_total,
+        y=y_total,
+        mode='lines',
+        name=f"${latex_funcion}$" if latex_funcion else texto_funcion1,
+        line=dict(color='green', width=2),
+        hovertemplate='x=%{x}<br>f(x)=%{y}<extra></extra>'
+    ))
+
+    # Área bajo la curva
+    fig.add_trace(go.Scatter(
+        x=np.concatenate([[a], x_fill, [b]]),
+        y=np.concatenate([[0], y_fill, [0]]),
+        fill='toself',
+        name="Área bajo la curva",
+        fillcolor='rgba(255,165,0,0.4)',
+        line=dict(color='orange'),
+        hoverinfo='skip'
+    ))
+
+    # Valor del área
     if area_valor is not None:
-        plt.text((a + b) / 2, max(y1) * 0.7, f"Área ≈ {area_valor:.4f}", fontsize=12,
-                 bbox=dict(facecolor='white', edgecolor='black'))
+        fig.add_annotation(
+            x=(a + b) / 2,
+            y=np.nanmax(y_fill) * 0.6,
+            text=f"Área ≈ {area_valor:.4f}",
+            showarrow=False,
+            font=dict(size=14, color="black"),
+            bgcolor="white"
+        )
 
-    plt.title("Visualización de Área")
-    plt.xlabel("x")
-    plt.ylabel("y")
-    plt.grid(True)
-    plt.legend()
+    # Título de la función
+    if latex_funcion:
+        fig.add_annotation(
+            xref="paper", yref="paper",
+            x=0.01, y=0.99,
+            text=f"${latex_funcion}$",
+            showarrow=False,
+            font=dict(size=18, color="darkgreen")
+        )
 
-    if guardar_como:
-        plt.savefig(guardar_como, dpi=300)
-        print(f"✅ Imagen guardada como: {guardar_como}")
+    # Líneas de a y b
+    fig.add_vline(x=a, line=dict(color='red', dash='dot'),
+                  annotation_text=f"a = {a}", annotation_position="bottom left")
+    fig.add_vline(x=b, line=dict(color='purple', dash='dot'),
+                  annotation_text=f"b = {b}", annotation_position="bottom right")
 
-    plt.show()
+    # Ejes X e Y bien centrados
+    fig.add_hline(y=0, line=dict(color='white', width=3))
+    fig.add_vline(x=0, line=dict(color='white', width=3))
+
+    # Estilo general
+    fig.update_layout(
+        title="Visualización Interactiva del Área",
+        xaxis_title="x",
+        yaxis_title="f(x)",
+        hovermode="x unified",
+        template="plotly_dark",
+        showlegend=True,
+        xaxis=dict(
+            showgrid=True,
+            zeroline=False,
+            rangeslider=dict(visible=True),
+            title="🖱️ Usa el scroll inferior o arrastra para explorar el dominio"
+        ),
+        yaxis=dict(
+            showgrid=True,
+            zeroline=False,
+            range=[y_lim_inf, y_lim_sup]
+        )
+    )
+
+    return fig

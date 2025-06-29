@@ -80,8 +80,8 @@ def graficar_area_interactiva(
                   annotation_text=f"b = {b}", annotation_position="bottom right")
 
     # Ejes X e Y bien centrados
-    fig.add_hline(y=0, line=dict(color='white', width=1))
-    fig.add_vline(x=0, line=dict(color='white', width=1))
+    fig.add_hline(y=0, line=dict(color='white', width=3))
+    fig.add_vline(x=0, line=dict(color='white', width=3))
 
     # Estilo general
     fig.update_layout(

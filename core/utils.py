@@ -1,8 +1,3 @@
-"""
-Autor: Josue Llumitasig
-Fecha: 2025-06-12
-Descripción: Funciones auxiliares para validar expresiones simbólicas y convertirlas a LaTeX.
-"""
 
 from sympy import symbols, sympify, latex, lambdify
 from sympy.core.sympify import SympifyError
@@ -10,17 +5,9 @@ from sympy.core.sympify import SympifyError
 x = symbols('x')
 
 def validar_funcion(entrada: str):
-    """
-    Valida que la entrada sea una función válida de x.
-    Retorna:
-    - expresión simbólica (SymPy)
-    - versión en LaTeX (str)
-    - mensaje de error (None si no hay error)
-    """
     try:
         expr = sympify(entrada)
-        # Probar si la expresión puede convertirse en una función evaluable
-        _ = lambdify(x, expr, modules=['numpy'])  # Solo para validar
+        _ = lambdify(x, expr, modules=['numpy'])  
         latex_str = latex(expr)
         return expr, latex_str, None
     except SympifyError:

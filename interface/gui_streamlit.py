@@ -8,7 +8,6 @@ from core.utils import validar_funcion
 from core.simpson import simpson_13
 from services.plot_service import graficar_area_interactiva
 from interface.components.keyboard_editor import teclado_visual
-from scipy.misc import derivative
 
 x = symbols("x")
 st.set_page_config(layout="wide", page_title="Calculadora Simpson")

@@ -506,7 +506,7 @@ elif opcion == "🛠️ Otras funciones":
 
     a2 = st.number_input("Límite inferior (a)", value=0.0, key="otras_a")
     b2 = st.number_input("Límite superior (b)", value=4.0, key="otras_b")
-    n2 = st.slider("Número de puntos", min_value=10, max_value=100, step=10, value=100, key="otras_n")
+    n2 = st.slider("Número de puntos", min_value=10, max_value=100, step=2, value=100, key="otras_n")
 
     if st.button("📌 Ejecutar cálculo", key="otras_calcular"):
         if f_err or g_err:

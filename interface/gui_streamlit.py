@@ -1,14 +1,18 @@
+
 import streamlit as st
 import numpy as np
 from sympy import symbols, integrate, lambdify, latex
 import os, sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from core.utils import validar_funcion
+from core.utils import validar_funcion, validar_limites
 from core.simpson import simpson_13
 from services.plot_service import graficar_area_interactiva
 from interface.components.keyboard_editor import teclado_visual
-from scipy.misc import derivative
+def derivative(func, x, dx=1e-6):
+    return (func(x + dx) - func(x - dx)) / (2 * dx)
+
+
 
 x = symbols("x")
 st.set_page_config(layout="wide", page_title="Calculadora Simpson")
@@ -238,7 +242,6 @@ de técnicas numéricas llamadas **reglas de cuadratura**.
     st.markdown("3. Evalúa \\(f(x_i)\\) en cada punto.")
     st.markdown("4. Aplica la fórmula con coeficientes 1, 4, 2,..., 4, 1.")
     st.markdown("5. Obtén una estimación del área.")
-
     st.markdown("### 🟢 Ventajas")
     st.markdown("- Más preciso que el método del trapecio con la misma cantidad de puntos")
     st.markdown("- Funciona muy bien con funciones suaves")
@@ -278,7 +281,11 @@ elif opcion == "✍️ Ingreso de datos":
     n = st.slider("Número de subintervalos (par):", 2, 100, 4, step=2)
 
     if st.button("📌 Calcular integral"):
-        try:
+        error_limites = validar_limites(a, b)
+        if error_limites:
+            st.error(error_limites)
+        else:
+         try:
             f = lambdify(x, expr, modules=["numpy"])
             resultado = simpson_13(f, a, b, n)
             st.session_state.update({
@@ -291,7 +298,7 @@ elif opcion == "✍️ Ingreso de datos":
                 "n": n
             })
             st.success("✅ Resultado guardado.")
-        except Exception as e:
+         except Exception as e:
             st.error(f"Error en el cálculo: {e}")
 
 # ======================= 📊 RESULTADOS ====================================
@@ -513,7 +520,11 @@ elif opcion == "🛠️ Otras funciones":
         if f_err or g_err:
             st.error(f_err or g_err)
         else:
-            try:
+            error_limites = validar_limites(a2, b2)
+            if error_limites:
+                st.error(error_limites)
+            else:
+             try:
                 f = lambdify(x, f_expr, modules=["numpy"])
                 x_vals = np.linspace(a2, b2, n2)
 
@@ -600,7 +611,7 @@ elif opcion == "🛠️ Otras funciones":
 
 
                 elif funcion_opcion == "Longitud de arco":
-                    from scipy.misc import derivative
+      
                     dy_dx = np.array([derivative(f, xi, dx=1e-6) for xi in x_vals])
                     integrando = np.sqrt(1 + dy_dx**2)
                     resultado_otro = np.trapz(integrando, x_vals)
@@ -609,7 +620,7 @@ elif opcion == "🛠️ Otras funciones":
                     st.info("📈 Esto estima la longitud de la curva definida por f(x) desde a hasta b.")
 
                 elif funcion_opcion == "Superficie de revolución":
-                    from scipy.misc import derivative
+                
                     y_vals = f(x_vals)
                     dy_dx = np.array([derivative(f, xi, dx=1e-6) for xi in x_vals])
                     integrando = 2 * np.pi * np.abs(y_vals) * np.sqrt(1 + dy_dx**2)
@@ -618,7 +629,7 @@ elif opcion == "🛠️ Otras funciones":
                     st.success(f"🌀 Superficie de revolución: {resultado_otro:.6f}")
                     st.info("🧮 Esta es el área de la superficie generada al girar la curva f(x) alrededor del eje x.")
 
-            except Exception as e:
+             except Exception as e:
                 st.error(f"❌ Error durante el cálculo: {e}")
 
 # ======================= 🧠 JUEGO DE APRENDIZAJE ==========================               

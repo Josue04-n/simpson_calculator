@@ -9,9 +9,9 @@ from core.utils import validar_funcion, validar_limites
 from core.simpson import simpson_13
 from services.plot_service import graficar_area_interactiva
 from interface.components.keyboard_editor import teclado_visual
+
 def derivative(func, x, dx=1e-6):
     return (func(x + dx) - func(x - dx)) / (2 * dx)
-
 
 
 x = symbols("x")
